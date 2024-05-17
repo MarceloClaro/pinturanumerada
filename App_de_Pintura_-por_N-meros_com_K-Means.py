@@ -531,6 +531,7 @@ def buscar_cor_proxima(rgb, cores_junguianas):
     cor_proxima_index = np.argmin(distancias)
     return cores_junguianas[str(cor_proxima_index + 1)]
 
+
 class Canvas():
     def __init__(self, src, nb_color, pixel_size=4000):
         self.src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)  # Corrige a ordem dos canais de cor
