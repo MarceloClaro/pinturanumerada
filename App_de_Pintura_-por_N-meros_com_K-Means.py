@@ -594,6 +594,7 @@ class Canvas():
 
     return new_img, kmeans.cluster_centers_
 
+
     def recreate_image(self, codebook, labels, width, height):
         vfunc = lambda x: codebook[labels[x]]
         out = vfunc(np.arange(width * height))
