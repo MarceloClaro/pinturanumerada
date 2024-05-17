@@ -1,15 +1,13 @@
-# Importando todas as coisas necessárias para o nosso programa funcionar.
-# Esses são como os blocos de construção que vamos usar para fazer o nosso programa.
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.utils import shuffle
+import cv2
+import streamlit as st
+from PIL import Image
+import io
+import base64
 
-import numpy as np  # Esta é uma ferramenta para lidar com listas de números.
-from sklearn.cluster import KMeans  # Essa é uma ferramenta que nos ajuda a encontrar grupos de coisas.
-from sklearn.utils import shuffle  # Isso nos ajuda a misturar coisas.
-import cv2  # Esta é uma ferramenta para trabalhar com imagens.
-import streamlit as st  # Isso é o que nos permite criar a interface do nosso programa.
-from PIL import Image  # Outra ferramenta para trabalhar com imagens.
-import io  # Essa é uma ferramenta que nos ajuda a lidar com arquivos e dados.
-import base64  # Essa é uma ferramenta que nos ajuda a converter dados.
-
+# Dicionário contendo cores Junguianas
 cores_junguianas = {
     '1': {
         'cor': 'Preto',
@@ -22,9 +20,7 @@ cores_junguianas = {
     # ... (outras cores Junguianas)
 }
 
-# Aqui estamos criando uma nova ferramenta que chamamos de "Canvas".
-# Isso nos ajuda a lidar com imagens e cores.
-
+# Funções auxiliares
 def rgb_to_cmyk(r, g, b):
     if (r == 0) and (g == 0) and (b == 0):
         return 0, 0, 0, 1
@@ -57,9 +53,10 @@ def buscar_cor_proxima(rgb, cores_junguianas):
     cor_proxima_index = np.argmin(distancias)
     return cores_junguianas[str(cor_proxima_index + 1)]
 
+# Classe Canvas para manipulação de imagem
 class Canvas():
     def __init__(self, src, nb_color, pixel_size=4000):
-        self.src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)  # Corrige a ordem dos canais de cor
+        self.src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
         self.nb_color = nb_color
         self.tar_width = pixel_size
         self.colormap = []
@@ -140,114 +137,52 @@ nb_color = st.sidebar.slider('Escolha o número de cores para pintar', min_value
 total_ml = st.sidebar.slider('Escolha o total em ml da tinta de cada cor', min_value=1, max_value=1000, value=10, step=1)
 pixel_size = st.sidebar.slider('Escolha o tamanho do pixel da pintura', min_value=500, max_value=8000, value=4000, step=100)
 
-import numpy as np
-
-# ...
-
 if st.sidebar.button('Gerar'):
     if uploaded_file is not None:
-        # Abrir a imagem diretamente do arquivo carregado
         pil_image = Image.open(uploaded_file)
         if 'dpi' in pil_image.info:
             dpi = pil_image.info['dpi']
             st.write(f'Resolução da imagem: {dpi} DPI')
 
-            # Calcula a dimensão física de um pixel
             cm_per_inch = pixel_size
-            cm_per_pixel = cm_per_inch / dpi[0]  # Supõe-se que a resolução seja a mesma em ambas as direções
+            cm_per_pixel = cm_per_inch / dpi[0]
             st.write(f'Tamanho de cada pixel: {cm_per_pixel:.4f} centímetros')
 
-        # Converter pil_image em uma matriz NumPy
         src = np.array(pil_image)
 
-        canvas = Canvas(src, nb_color, pixel_size)  # Use src aqui em vez de pil_image
+        canvas = Canvas(src, nb_color, pixel_size)
         result, colors, segmented_image = canvas.generate()
-        
-        # O restante do código permanece inalterado
 
-        
-        # O restante do código permanece inalterado
+        segmented_image = (segmented_image * 255).astype(np.uint8)
+        segmented_image = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB)
 
-
-    # Converter imagem segmentada para np.uint8
-    segmented_image = (segmented_image * 255).astype(np.uint8)
-
-    # Agora converta de BGR para RGB
-    segmented_image = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB)
-
-    # Análise da Cor Dominante Junguiana
-    st.image(segmented_image, caption='Imagem Segmentada', use_column_width=True)
-    cor_dominante = buscar_cor_proxima(colors[0], cores_junguianas)
-    st.write("---")
-    st.image(result, caption='Imagem para pintar', use_column_width=True)
-    st.write("---")
-
-    st.subheader("Análise da Cor Dominante Junguiana")
-    st.write(f"A cor dominante na paleta é {cor_dominante['cor']}.")
-    st.write(f"Anima/Animus: {cor_dominante['anima_animus']}")
-    st.write(f"Sombra: {cor_dominante['sombra']}")
-    st.write(f"Personalidade: {cor_dominante['personalidade']}")
-    st.write(f"Diagnóstico: {cor_dominante['diagnostico']}")
-    # Separador
-    st.write("---")
-
-    # Mostrar paleta de cores
-
-    for i, color in enumerate(colors):
-        color_block = np.ones((50, 50, 3), np.uint8) * color[::-1]  # Cores em formato BGR
-        st.image(color_block, caption=f'Cor {i+1}', width=50)
-
-        # Cálculo das proporções das cores CMYK
-        r, g, b = color
-        c, m, y, k = rgb_to_cmyk(r, g, b)
-        c_ml, m_ml, y_ml, k_ml = calculate_ml(c, m, y, k, total_ml)
-
-        # Calcular a área da cor na imagem segmentada
-        color_area = np.count_nonzero(np.all(segmented_image == color, axis=-1))
-        total_area = segmented_image.shape[0] * segmented_image.shape[1]
-        color_percentage = (color_area / total_area) * 100
-
-        # Separador
+        st.image(segmented_image, caption='Imagem Segmentada', use_column_width=True)
+        cor_dominante = buscar_cor_proxima(colors[0], cores_junguianas)
+        st.write("---")
+        st.image(result, caption='Imagem para pintar', use_column_width=True)
         st.write("---")
 
-        st.subheader("Sketching and concept development da paleta de cor")
-        st.write(f"""
-        PALETAS DE COR PARA: {total_ml:.2f} ml.
+        cor_hex = '#%02x%02x%02x' % tuple(cor_dominante['rgb'])
+        cmyk = rgb_to_cmyk(*cor_dominante['rgb'])
+        ml_values = calculate_ml(*cmyk, total_ml)
 
-        A cor pode ser alcançada pela combinação das cores primárias do modelo CMYK, utilizando a seguinte dosagem:
+        st.write(f"Cor dominante: {cor_dominante['cor']}")
+        st.write(f"Anima/Animus: {cor_dominante['anima_animus']}")
+        st.write(f"Sombra: {cor_dominante['sombra']}")
+        st.write(f"Personalidade: {cor_dominante['personalidade']}")
+        st.write(f"Diagnóstico: {cor_dominante['diagnostico']}")
+        st.write(f"Cor em hexadecimal: {cor_hex}")
+        st.write(f"Valores CMYK: C: {cmyk[0]:.2f}, M: {cmyk[1]:.2f}, Y: {cmyk[2]:.2f}, K: {cmyk[3]:.2f}")
+        st.write(f"Quantidade de tinta (ml): C: {ml_values[0]:.2f}, M: {ml_values[1]:.2f}, Y: {ml_values[2]:.2f}, K: {ml_values[3]:.2f}")
 
-        Ciano (Azul) (C): {c_ml:.2f} ml
-        Magenta (Vermelho) (M): {m_ml:.2f} ml
-        Amarelo (Y): {y_ml:.2f} ml
-        Preto (K): {k_ml:.2f} ml
+        # Baixar imagem
+        st.write("---")
+        result_pil = Image.fromarray(result)
+        buffer = io.BytesIO()
+        result_pil.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode()
 
-        """)
-        cor_proxima = buscar_cor_proxima(color, cores_junguianas)
-        st.write(f"      Cor Junguiana Mais Próxima: {cor_proxima['cor']}")
-        st.write(f"      Anima/Animus: {cor_proxima['anima_animus']}")
-        st.write(f"      Sombra: {cor_proxima['sombra']}")
-        st.write(f"      Personalidade: {cor_proxima['personalidade']}")
-        st.write(f"      Diagnóstico: {cor_proxima['diagnostico']}")
-
-    result_bytes = cv2.imencode('.jpg', result)[1].tobytes()
-    # Separador
-    st.write("---")
-    st.image(result, caption='Imagem para pintar', use_column_width=True)
-    st.download_button(
-        label="Baixar Imagem para pintar",
-        data=result_bytes,
-        file_name='result.jpg',
-        mime='image/jpeg')
-
-
-    segmented_image_rgb = cv2.cvtColor(segmented_image, cv2.COLOR_BGR2RGB)
-    segmented_image_bytes = cv2.imencode('.jpg', segmented_image_rgb)[1].tobytes()
-    # Separador
-    st.write("---")
-     
-    st.image(segmented_image, caption='Imagem Segmentada', use_column_width=True)
-    st.download_button(
-        label="Baixar imagem segmentada",
-        data=segmented_image_bytes,
-        file_name='segmented.jpg',
-        mime='image/jpeg')
+        href = f'<a href="data:image/png;base64,{img_str}" download="tela_para_pintar.png">Baixar imagem para pintar</a>'
+        st.markdown(href, unsafe_allow_html=True)
+    else:
+        st.sidebar.error("Por favor, carregue uma imagem.")
