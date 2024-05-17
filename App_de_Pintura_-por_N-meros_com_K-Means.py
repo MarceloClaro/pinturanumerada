@@ -578,7 +578,7 @@ class Canvas():
         img_dilation = cv2.dilate(img_erosion, kernel, iterations=1)
         return img_dilation
 
-    def quantification(self, picture):
+    def quantification(picture):
     width, height, depth = picture.shape
     flattened = np.reshape(picture, (width * height, depth))
     sample = shuffle(flattened)[:1000]
