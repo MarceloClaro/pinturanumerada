@@ -524,12 +524,12 @@ def calculate_ml(c, m, y, k, total_ml):
 
 def buscar_cor_proxima(rgb, cores_junguianas):
     distancias = []
-    for cor_junguiana in cores_junguianas.values():
+    for cor_id, cor_junguiana in cores_junguianas.items():
         cor_junguiana_rgb = cor_junguiana['rgb']
         distancia = np.sqrt(np.sum((np.array(rgb) - np.array(cor_junguiana_rgb)) ** 2))
-        distancias.append(distancia)
-    cor_proxima_index = np.argmin(distancias)
-    return cores_junguianas[str(cor_proxima_index + 1)]
+        distancias.append((cor_id, distancia))
+    cor_proxima_id, _ = min(distancias, key=lambda x: x[1])
+    return cores_junguianas[cor_proxima_id]
 
 
 class Canvas():
@@ -650,10 +650,6 @@ if st.sidebar.button('Gerar'):
         
         # O restante do código permanece inalterado
 
-        
-        # O restante do código permanece inalterado
-
-
     # Converter imagem segmentada para np.uint8
     segmented_image = (segmented_image * 255).astype(np.uint8)
 
@@ -707,6 +703,17 @@ if st.sidebar.button('Gerar'):
         Preto (K): {k_ml:.2f} ml
 
         """)
+        for cor_id, cor_paleta in paleta_de_cores.items():
+    cor_rgb = cor_paleta['rgb']
+    cor_proxima = buscar_cor_proxima(cor_rgb, cores_junguianas)
+    st.write(f"Cor da Paleta: {cor_id}")
+    st.write(f"Cor Junguiana Mais Próxima: {cor_proxima['cor']}")
+    st.write(f"Anima/Animus: {cor_proxima['anima_animus']}")
+    st.write(f"Sombra: {cor_proxima['sombra']}")
+    st.write(f"Personalidade: {cor_proxima['personalidade']}")
+    st.write(f"Diagnóstico: {cor_proxima['diagnostico']}")
+    st.write("\n")
+
         cor_proxima = buscar_cor_proxima(color, cores_junguianas)
         st.write(f"      Cor Junguiana Mais Próxima: {cor_proxima['cor']}")
         st.write(f"      Anima/Animus: {cor_proxima['anima_animus']}")
