@@ -585,6 +585,8 @@ class Canvas():
     kmeans = KMeans(n_clusters=self.nb_color).fit(sample)
     labels = kmeans.predict(flattened)
     new_img = self.recreate_image(kmeans.cluster_centers_, labels, width, height)
+    return new_img, kmeans.cluster_centers_
+
 
     # Adicionando logs para verificar as cores encontradas
     st.write(f"Número de cores encontradas: {len(kmeans.cluster_centers_)}")
