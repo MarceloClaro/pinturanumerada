@@ -579,13 +579,20 @@ class Canvas():
         return img_dilation
 
     def quantification(self, picture):
-        width, height, depth = picture.shape
-        flattened = np.reshape(picture, (width * height, depth))
-        sample = shuffle(flattened)[:1000]
-        kmeans = KMeans(n_clusters=self.nb_color).fit(sample)
-        labels = kmeans.predict(flattened)
-        new_img = self.recreate_image(kmeans.cluster_centers_, labels, width, height)
-        return new_img, kmeans.cluster_centers_
+    width, height, depth = picture.shape
+    flattened = np.reshape(picture, (width * height, depth))
+    sample = shuffle(flattened)[:1000]
+    kmeans = KMeans(n_clusters=self.nb_color).fit(sample)
+    labels = kmeans.predict(flattened)
+    new_img = self.recreate_image(kmeans.cluster_centers_, labels, width, height)
+
+    # Adicionando logs para verificar as cores encontradas
+    st.write(f"Número de cores encontradas: {len(kmeans.cluster_centers_)}")
+    st.write("Cores encontradas:")
+    for i, color in enumerate(kmeans.cluster_centers_):
+        st.write(f"Cor {i+1}: {color}")
+
+    return new_img, kmeans.cluster_centers_
 
     def recreate_image(self, codebook, labels, width, height):
         vfunc = lambda x: codebook[labels[x]]
